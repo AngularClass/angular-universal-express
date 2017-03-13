@@ -101,9 +101,20 @@ function handleModuleRef(moduleRef: NgModuleRef<{}>, callback: Send, setupOption
     .filter((isStable: boolean) => isStable)
     .first()
     .subscribe((stable: boolean) => {
-      (<any>moduleRef).instance[setupOptions.universalOnInit](moduleRef, setupOptions);
+      try {
+        if (!(<any>moduleRef).instance[setupOptions.universalOnInit]) {
+          console.log('Universal Error: Please provide ' + setupOptions.universalOnInit + 'on the ngModule ' + moduleRef.name);
+        }
+        (<any>moduleRef).instance[setupOptions.universalOnInit](moduleRef, setupOptions);
+      } catch (e) {
+        console.log('Universal Error', err);
+      }
 
       callback(null, state.renderToString());
       moduleRef.destroy();
+    },
+    (err) => {
+      console.log('Universal Error', err);
+
     });
 }
