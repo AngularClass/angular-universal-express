@@ -15,8 +15,8 @@ export interface UniversalOnInit {
 export interface UniversalSetupOptions {
   aot?: boolean;
   universalOnInit?: string;
-  ngModule: Type<{}> | NgModuleFactory<{}>;
-  bootstrap: Type<{}> | NgModuleFactory<{}>;
+  ngModule?: Type<{}> | NgModuleFactory<{}>;
+  bootstrap?: Type<{}> | NgModuleFactory<{}>;
   providers?: Provider[];
 }
 
@@ -109,12 +109,16 @@ function handleModuleRef(moduleRef: NgModuleRef<{}>, callback: Send, setupOption
         (<any>moduleRef).instance[setupOptions.universalOnInit](moduleRef, setupOptions);
       } catch (e) {
         console.log('Universal Error', err);
-        moduleRef.destroy();
+        try {
+          moduleRef.destroy();
+        } catch (ee) {}
         callback(err);
         return;
       }
 
-      moduleRef.destroy();
+      try {
+        moduleRef.destroy();
+      } catch (eee) {}
       callback(null, state.renderToString());
       return;
     },
