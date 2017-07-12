@@ -16,6 +16,7 @@ export interface UniversalSetupOptions {
   aot?: boolean;
   universalOnInit?: string;
   ngModule: Type<{}> | NgModuleFactory<{}>;
+  bootstrap: Type<{}> | NgModuleFactory<{}>;
   providers?: Provider[];
 }
 
@@ -34,7 +35,7 @@ export function universalExpressEngine(setupOptions: UniversalSetupOptions) {
 
   return function (filePath: string, options: { req: Request, res?: Response }, callback: Send) {
     try {
-      const moduleFactory = setupOptions.ngModule;
+      const moduleFactory = setupOptions.ngModule || setupOptions.bootstrap;
 
       if (!moduleFactory) {
         throw new Error('You must pass in a NgModule or NgModuleFactory to be bootstrapped');
@@ -59,7 +60,7 @@ export function universalExpressEngine(setupOptions: UniversalSetupOptions) {
       moduleRefPromise.then((moduleRef: NgModuleRef<{}>) => {
         handleModuleRef(moduleRef, callback, setupOptions);
         return moduleRef;
-      });
+      }, (err) => callback(e));
 
     } catch (e) {
       callback(e);
@@ -108,13 +109,17 @@ function handleModuleRef(moduleRef: NgModuleRef<{}>, callback: Send, setupOption
         (<any>moduleRef).instance[setupOptions.universalOnInit](moduleRef, setupOptions);
       } catch (e) {
         console.log('Universal Error', err);
+        moduleRef.destroy();
+        callback(err);
+        return;
       }
 
-      callback(null, state.renderToString());
       moduleRef.destroy();
+      callback(null, state.renderToString());
+      return;
     },
     (err) => {
       console.log('Universal Error', err);
-
+      callback(err);
     });
 }
