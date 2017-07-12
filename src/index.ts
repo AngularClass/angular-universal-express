@@ -60,7 +60,7 @@ export function universalExpressEngine(setupOptions: UniversalSetupOptions) {
       moduleRefPromise.then((moduleRef: NgModuleRef<{}>) => {
         handleModuleRef(moduleRef, callback, setupOptions);
         return moduleRef;
-      }, (err) => callback(e));
+      }, (err: any) => callback(err));
 
     } catch (e) {
       callback(e);
@@ -94,7 +94,7 @@ function getDocument(filePath: string): string {
 /**
  * Handle the request with a given NgModuleRef
  */
-function handleModuleRef(moduleRef: NgModuleRef<{}>, callback: Send, setupOptions: UniversalSetupOptions) {
+function handleModuleRef(moduleRef: NgModuleRef<{}>, callback: Send | any, setupOptions: UniversalSetupOptions) {
   const state = moduleRef.injector.get(PlatformState);
   const appRef = moduleRef.injector.get(ApplicationRef);
 
@@ -104,25 +104,26 @@ function handleModuleRef(moduleRef: NgModuleRef<{}>, callback: Send, setupOption
     .subscribe((stable: boolean) => {
       try {
         if (!(<any>moduleRef).instance[setupOptions.universalOnInit]) {
-          console.log('Universal Error: Please provide ' + setupOptions.universalOnInit + 'on the ngModule ' + moduleRef.name);
+          console.log('Universal Error: Please provide ' + setupOptions.universalOnInit + 'on the ngModule ' + (<any>moduleRef).name);
         }
         (<any>moduleRef).instance[setupOptions.universalOnInit](moduleRef, setupOptions);
       } catch (e) {
-        console.log('Universal Error', err);
+        console.log('Universal Error', e);
         try {
           moduleRef.destroy();
         } catch (ee) {}
-        callback(err);
+        callback(e);
         return;
       }
 
       try {
         moduleRef.destroy();
       } catch (eee) {}
-      callback(null, state.renderToString());
+      const html = state.renderToString();
+      callback(null, html);
       return;
     },
-    (err) => {
+    (err: any) => {
       console.log('Universal Error', err);
       callback(err);
     });
