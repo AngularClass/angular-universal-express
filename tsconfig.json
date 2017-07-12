@@ -16,9 +16,7 @@
     "lib": ["es6", "dom"]
   },
   "exclude": [
-    "node_modules",
-    "typings/main.d.ts",
-    "typings/main"
+    "node_modules"
   ],
   "angularCompilerOptions": {
     "strictMetadataEmit": true
